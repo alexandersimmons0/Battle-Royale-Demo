@@ -42,14 +42,14 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks{
     }
 
     void SetScreen(GameObject screen){
-        if(screen == lobbyBrowserScreen){
-            UpdateLobbyBrowserUI();
-        }
         mainScreen.SetActive(false);
         createRoomScreen.SetActive(false);
         lobbyScreen.SetActive(false);
         lobbyBrowserScreen.SetActive(false);
         screen.SetActive(true);
+        if(screen == lobbyBrowserScreen){
+            UpdateLobbyBrowserUI();
+        }
     }
 
     public void OnPlayerNameValueChanged(TMP_InputField playerNameInput){
@@ -57,12 +57,11 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks{
     }
 
     public override void OnConnectedToMaster(){
-        Debug.Log("connected to master");
         createRoomButton.interactable = true;
         findRoomButton.interactable = true;
     }
 
-    public void OnCreatedRoom(){
+    public void OnCreatedRoomButton(){
         SetScreen(createRoomScreen);
     }
 
@@ -78,6 +77,7 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks{
         NetworkManager.instance.CreateRoom(roomNameInput.text);
     }
 
+    [PunRPC]
     public override void OnJoinedRoom(){
         SetScreen(lobbyScreen);
         photonView.RPC("UpdateLobbyUI", RpcTarget.All);
@@ -87,16 +87,18 @@ public class Menu : MonoBehaviourPunCallbacks, ILobbyCallbacks{
     void UpdateLobbyUI(){
         startGameButton.interactable = PhotonNetwork.IsMasterClient;
         playerListText.text = "";
+        Debug.Log("Updating UI");
         foreach(Player player in PhotonNetwork.PlayerList){
-            playerListText.text += player.NickName + "\n";
-            roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
+            playerListText.text += player.NickName + "\n";    
         }
+        roomInfoText.text = "<b>Room Name</b>\n" + PhotonNetwork.CurrentRoom.Name;
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer){
         UpdateLobbyUI();
     }
 
+    [PunRPC]
     public void OnStartGameButton(){
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
